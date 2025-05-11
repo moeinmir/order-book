@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'accounts',
-    'drf_yasg'
+    'drf_yasg',
+    'tokensbalances'
 ]
 
 MIDDLEWARE = [
@@ -159,4 +160,6 @@ SWAGGER_SETTINGS = {
 
 
 
+## we supposed that our values wont be greater than this for now
+MAX_BIGINT = 2**63 - 1
 
