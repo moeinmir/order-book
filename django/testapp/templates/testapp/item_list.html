@@ -1,0 +1,17 @@
+<!-- testapp/templates/testapp/item_list.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item List</title>
+</head>
+<body>
+    <h1>All Items</h1>
+    <ul>
+        {% for item in items %}
+            <li><strong>{{ item.name }}</strong>: {{ item.description }}</li>
+        {% empty %}
+            <li>No items found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
