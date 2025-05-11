@@ -1,21 +1,15 @@
 from django.shortcuts import render
-
-# Create your views here.
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import RegisterRequestSerializer
 from .serializers import RegisterResponseSerializer
-
+from .serializers import GetUserAccountInformationSerializer
 from rest_framework.permissions import IsAuthenticated
-
-from rest_framework.permissions import IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from bip_utils import Bip44Changes
 from .services import UserService
-
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 
 
@@ -30,9 +24,22 @@ def register(request):
     if register_serializer_request.is_valid():
         user = UserService.create_user(register_serializer_request.validated_data)
         register_response_serializer = RegisterResponseSerializer(user)
-        return Response({"message": "User registered", "user":register_response_serializer.data }, status=status.HTTP_201_CREATED)
-    return Response(register_serializer_request.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "User registered", "user":register_response_serializer.data }, status=201)
+    return Response(register_serializer_request.errors, status=400)
 
+@swagger_auto_schema(
+    method='get',
+    responses={200:GetUserAccountInformationSerializer }
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_account_information(request):
+    user = request.user
+    response = GetUserAccountInformationSerializer(user)
+    return Response({"message": "User Information", "user":response.data }, status=200)
+
+
+##########################################################################
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
