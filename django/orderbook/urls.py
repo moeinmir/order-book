@@ -7,7 +7,8 @@ from drf_yasg import openapi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/accounts/', include('accounts.urls')),    
+    path('api/accounts/', include('accounts.urls')),  
+    path('api/tokensbalances/',include('tokensbalances.urls'))  
 ]
 
 schema_view = get_schema_view(
