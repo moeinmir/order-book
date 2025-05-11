@@ -11,15 +11,35 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from bip_utils import Bip44Changes
+from .services import UserService
 
-class RegisterView(APIView):
-    @swagger_auto_schema(request_body=RegisterSerializer)
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User registered"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from rest_framework.decorators import api_view
+
+
+
+@swagger_auto_schema(
+    method='post',
+    request_body=RegisterSerializer,
+    responses={201: RegisterSerializer}
+)
+@api_view(['POST'])
+def register(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = UserService.create_user(serializer.validated_data)
+        register_serializer = RegisterSerializer(user)
+        return Response({"message": "User registered", "user_id":register_serializer.data }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class RegisterView(APIView):
+#     @swagger_auto_schema(request_body=RegisterSerializer)
+#     def post(self, request):
+#         serializer = RegisterSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.save()
+#             return Response({"message": "User registered"}, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -35,11 +55,11 @@ class MeView(APIView):
     
 
 
-class AdminOnlyView(APIView):
-    permission_classes = [IsAdminUser]
+# class AdminOnlyView(APIView):
+#     permission_classes = [IsAdminUser]
 
-    def get(self, request):
-        return Response({"message": "You are an admin!"})
+#     def get(self, request):
+#         return Response({"message": "You are an admin!"})
 
 
 

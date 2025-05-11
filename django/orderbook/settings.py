@@ -146,7 +146,6 @@ APP_COIN = "eth"
 
 WEB3_PROVIDER_URI = "https://sepolia.infura.io/v3/606e13ffd6df44198c4b65a8ec4461dc"
 
-
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -157,4 +156,7 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
+
+
 
