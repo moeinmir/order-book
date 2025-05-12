@@ -13,4 +13,6 @@ class UserService:
         user = CustomUser.objects.create_user(**validated_data)
         return user
     
-
+    @staticmethod
+    def get_user_by_id(user_id):
+        return CustomUser.objects.get(id=user_id)

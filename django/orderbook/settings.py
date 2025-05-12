@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # e.g., 60 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),    # e.g., 30 days
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -163,3 +169,21 @@ SWAGGER_SETTINGS = {
 ## we supposed that our values wont be greater than this for now
 MAX_BIGINT = 2**63 - 1
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+import os
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
