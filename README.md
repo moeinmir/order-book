@@ -89,14 +89,26 @@ implementation and learning
 
 Order Book Flows:
 
+
+
+
+3: The user calls his balance then enquiry the chain and updates his balance in the table and gives him his balance.
+get tokens
+get my balance for given token
+
+
+
+4: user register order we check his free balance lock some amount of it and and register order
+5: a job looking for the matched order and settle them and change them in chain and db
+
+We do lock and chain call before acting to be safe
+
+
+
+6: user give token and some address and say what token to withdraw and we move the transfer in the chain and then in db
+
 1: user call to register and give (username , password) with the application secret key in the chain one public key is generated and one record related to this user is created in the database that contains his personal info and public key.
 1: user provide call for access token and refresh token and receive them
 2: user calls and gives access token and receives his account number so he could use it for charging his balance.
-3: The user calls his balance then enquiry the chain and updates his balance in the table and gives him his balance.
-4: user register order we check his free balance lock some amount of it and and register order
-5: a job looking for the matched order and settle them and change them in chain and db
-6: user give token and some address and say what token to withdraw and we move the transfer in the chain and then in db
-
-We do lock and chain call before acting to be safe
 
 
