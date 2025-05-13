@@ -1,6 +1,4 @@
 from django.db import models
-
-from django.db import models
 from accounts.models import CustomUser
 
 class Token(models.Model):
@@ -16,8 +14,8 @@ class Token(models.Model):
         return f"{self.get_type_display()} Token @ {self.address}"
 
 class AccountBalance(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='balances')
-    token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='balances')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='accountbalanceuser')
+    token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='accaountbalancetoken')
     total_balance = models.BigIntegerField(default=0)
     locked_amount = models.BigIntegerField(default=0)
     free_amount = models.BigIntegerField(default=0)

@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 
+
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # e.g., 60 minutes
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),    # e.g., 30 days
@@ -43,12 +45,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'testapp',
-    'rest_framework',
-    'rest_framework_simplejwt',
     'accounts',
-    'drf_yasg',
-    'tokensbalances'
+    # 'testapp',
+    # 'rest_framework',
+    # 'rest_framework_simplejwt',
+    # 'drf_yasg',
+    # 'tokensbalances',
+    # 'orders'
 ]
 
 MIDDLEWARE = [
@@ -94,6 +97,8 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 
@@ -144,7 +149,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 APP_MNEMONIC = "fatigue woman mango fever saddle already sibling blanket multiply that language smoke"
