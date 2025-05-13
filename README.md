@@ -112,3 +112,23 @@ We do lock and chain call before acting to be safe
 2: user calls and gives access token and receives his account number so he could use it for charging his balance.
 
 
+________________________
+as the current state of our project suggest we have to do this so we could say it is mainly done
+1: find a mechanism to match order
+2: find a mechanism to execute matched orders
+3: transfer the money from user account  to a specific account when he provide fund
+4: give the interface to make the transfer from his account to app account and make the required changes
+
+
+insert some initial tokens
+5: give the view for user to register order
+6: give the view his orders
+7: give the view for user to see orders with several filters
+
+
+first lets handle order book matching problems
+
+
+
+
+
