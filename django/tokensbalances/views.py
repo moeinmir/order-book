@@ -90,4 +90,42 @@ def withdraw_token(request):
     else:    
         return Response(withdraw_token_response_serializer.data,status=400)
     
+
+@swagger_auto_schema(
+    method='post',
+    manual_parameters=[token_id_param],
+    request_body = ChargeTokenRequestSerializer,
+    responses={200: ChargeTokenResponseSerializer}
+)
+@api_view(['post'])
+@permission_classes([IsAuthenticated])
+def charge_token(request):
+    logger.info(f'request:{request}')
+    user = request.user
+    logger.info(f'user:{user}')
+    token_id = request.query_params.get("token_id")
+    logger.info(f'token_id:{token_id}')
+    charge_token_request_serializer = ChargeTokenRequestSerializer(data=request.data)
+
+    if not charge_token_request_serializer.is_valid():
+        logger.error("invalid body")
+        return Response(charge_token_request_serializer.errors, status=400)
+
+    logger.info(f'charge_token_request_serializer: {charge_token_request_serializer}')
+    charge_amount = charge_token_request_serializer.validated_data['charge_amount']
+    logger.info(f'charge_amount:{charge_amount}')
+    success, account_balance, tx = TokenBalanceService.transfer_from_user_to_central_hd_wallet_to_central_wallet(
+        token_id,user.id, int(charge_amount)
+    )
+    charge_token_response_serializer = ChargeTokenResponseSerializer({
+    'charged_amount' : charge_amount,
+    'token_id' : token_id,
+    'free_amount' : str(account_balance.free_amount),
+    'tx' : tx
+    })
+    logger.info(f'withdraw_token_response_serializer:{charge_token_response_serializer}')
+    if(success):
+        return Response(charge_token_response_serializer.data,status=200)
+    else:    
+        return Response(charge_token_response_serializer.data,status=400)
     

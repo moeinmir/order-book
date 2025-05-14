@@ -31,7 +31,7 @@ def transfer_token(from_address, to_address: str, amount: int, token_address: st
     logger.info(f'nonce:{nonce}')
     tx = contract.functions.transfer(to_address, amount).build_transaction({
         'chainId': 11155111,
-        'gas': 1000000,
+        'gas': 700000,
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce
     })
