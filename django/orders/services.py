@@ -1,5 +1,9 @@
 from .models import TokenPair
 from .models import Order
+from tokensbalances.models import AccountBalance
+from django.db import transaction
+from accounts.services import UserService
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -18,8 +22,49 @@ class OrderService():
 
     @staticmethod
     def add_order(user_id, token_pair_id, amount,type,direction,limit_price):
+        with transaction.atomic():
+            logger.info(f'{user_id},{token_pair_id},{amount},{type},{direction},{limit_price}')
+            token_pair = OrderService.get_token_pair_by_id(token_pair_id)
+            logger.info(f'token_pair {token_pair}')
+            required_token_id = token_pair.base_token.id if direction == Order.OrderDirection.BUY else token_pair.pair_token.id
+            logger.info(f'required_token__id: {required_token_id}')
+            user_token_balance = AccountBalance.objects.filter(user=user_id,token = required_token_id).first()
+            logger.info(f'user_token-balance:{user_token_balance}')
+            locked = user_token_balance.lock_if_not()
+            if not locked:
+                logger.error(f'token balance record is locked')
+                return(False, user_token_balance)
+            if (direction == Order.OrderDirection.SELL ):
+                required_token_amount = amount
+            elif(type==Order.OrderType.LIMIT):
+                required_token_amount = amount*limit_price
+            else:    
+                #here it means i will to pay amount to get what ever if can
+                required_token_amount = amount
+            
+            if (user_token_balance.free_amount < required_token_amount):
+                logger.error(f'insufficient balance')
+                transaction.set_rollback(True)
+                return (False,user_token_balance)
+            else:
+                user = UserService.get_user_by_id(user_id)
+                user_token_balance.free_amount = user_token_balance.free_amount - required_token_amount
+                user_token_balance.locked_amount = user_token_balance.locked_amount + required_token_amount
+                user_token_balance.is_locked = False
+                user_token_balance.save()
+                order = Order()    
+                order.user = user
+                order.amount = amount
+                order.type = type
+                order.direction = direction
+                order.token_pair = token_pair
+                order.limit_price = limit_price    
+                order.save()
+            return (True,order)  
         
-        return (True,)  
+
+    def get_orders():
+        return Order.objects.all()
 
 class MatchOrdersService():    
     token_pairs = OrderService.get_token_pairs()

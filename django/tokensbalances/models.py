@@ -20,6 +20,15 @@ class AccountBalance(models.Model):
     locked_amount = models.BigIntegerField(default=0)
     free_amount = models.BigIntegerField(default=0)
     is_locked = models.BooleanField(default=False)
+    
+    def lock_if_not(self):
+        if self.is_locked:
+            return False
+        else:
+            self.save()
+            self.is_locked = True
+            return True
+
 
     class Meta:
         unique_together = ('user', 'token')
