@@ -39,7 +39,7 @@ def get_my_token_balance(request):
     logger.info(f'user:{user}')
     token_id = request.query_params.get("token_id")
     logger.info(f'token_id:{token_id}')
-    success, account_balance = TokenBalanceService.fetch_update_get_user_token_balance(token_id,user.id)
+    success, account_balance = TokenBalanceService.fetch_update_get_user_hd_wallet_balance(token_id,user.id)
     logger.info(f'account_balance:{account_balance}')
     logger.info(f'success:{success}')
     get_account_token_balance_serializer = GetAccountTokenBalanceSerializer(account_balance)
@@ -74,7 +74,7 @@ def withdraw_token(request):
     logger.info(f'to_address:{to_address}')
     withdraw_amount = withdraw_token_request_serializer.validated_data['withdraw_amount']
     logger.info(f'withdraw_amount:{withdraw_amount}')
-    success, account_balance, tx = TokenBalanceService.fetch_withdraw_update_user_token_balance(
+    success, account_balance, tx = TokenBalanceService.fetch_withdraw_update_user_hd_wallet_balance(
         token_id,user.id, int(withdraw_amount),to_address
     )
     withdraw_token_response_serializer = WithdrawTokenResponseSerializer(        {

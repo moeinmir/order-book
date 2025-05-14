@@ -191,3 +191,6 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+
+APPLICATION_ETH_ADDRESS = "0xc1B4D8a83c039Dd48c9D212cbbcCA9787A1619Ac"

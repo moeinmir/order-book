@@ -16,7 +16,7 @@ class Token(models.Model):
 class AccountBalance(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='accountbalanceuser')
     token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='accaountbalancetoken')
-    total_balance = models.BigIntegerField(default=0)
+    hd_wallet_balance = models.BigIntegerField(default=0)
     locked_amount = models.BigIntegerField(default=0)
     free_amount = models.BigIntegerField(default=0)
     is_locked = models.BooleanField(default=False)
