@@ -114,7 +114,7 @@ def charge_token(request):
     logger.info(f'charge_token_request_serializer: {charge_token_request_serializer}')
     charge_amount = charge_token_request_serializer.validated_data['charge_amount']
     logger.info(f'charge_amount:{charge_amount}')
-    success, account_balance, tx = TokenBalanceService.transfer_from_user_to_central_hd_wallet_to_central_wallet(
+    success, account_balance, tx = TokenBalanceService.transfer_from_user_hd_wallet_to_central_hd_wallet(
         token_id,user.id, int(charge_amount)
     )
     charge_token_response_serializer = ChargeTokenResponseSerializer({
@@ -123,9 +123,54 @@ def charge_token(request):
     'free_amount' : str(account_balance.free_amount),
     'tx' : tx
     })
-    logger.info(f'withdraw_token_response_serializer:{charge_token_response_serializer}')
+    logger.info(f'charge_token_response_serializer:{charge_token_response_serializer}')
     if(success):
         return Response(charge_token_response_serializer.data,status=200)
     else:    
         return Response(charge_token_response_serializer.data,status=400)
     
+
+
+
+
+#transfer_from_user_credit_to_user_hd_wallet
+
+
+@swagger_auto_schema(
+    method='post',
+    manual_parameters=[token_id_param],
+    request_body = MoveTokenToHdWalletRequestSerializer,
+    responses={200: MoveTokenToHdWalletResponseSerializer}
+)
+@api_view(['post'])
+@permission_classes([IsAuthenticated])
+def move_token_to_hd_wallet(request):
+    logger.info(f'request:{request}')
+    user = request.user
+    logger.info(f'user:{user}')
+    token_id = request.query_params.get("token_id")
+    logger.info(f'token_id:{token_id}')
+    move_token_to_hd_wallet_request_serializer = MoveTokenToHdWalletRequestSerializer(data=request.data)
+
+    if not move_token_to_hd_wallet_request_serializer.is_valid():
+        logger.error("invalid body")
+        return Response(move_token_to_hd_wallet_request_serializer.errors, status=400)
+
+    logger.info(f'charge_token_request_serializer: {move_token_to_hd_wallet_request_serializer}')
+    amount_to_be_moved = move_token_to_hd_wallet_request_serializer.validated_data['amount_to_be_moved']
+    logger.info(f'amount_to_be_moved:{amount_to_be_moved}')
+    success, account_balance, tx = TokenBalanceService.transfer_from_user_credit_to_user_hd_wallet(
+        token_id,user.id, int(amount_to_be_moved)
+    )
+    move_token_to_hd_wallet_response_serializer = MoveTokenToHdWalletResponseSerializer({
+    'moved_amount' : amount_to_be_moved,
+    'token_id' : token_id,
+    'remaining_amount' : str(account_balance.free_amount),
+    'tx' : tx
+    })
+    logger.info(f'move_token_to_hd_wallet_response_serializer:{move_token_to_hd_wallet_response_serializer}')
+    if(success):
+        return Response(move_token_to_hd_wallet_response_serializer.data,status=200)
+    else:    
+        return Response(move_token_to_hd_wallet_response_serializer.data,status=400)
+ 

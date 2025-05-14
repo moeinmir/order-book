@@ -126,9 +126,26 @@ insert some initial tokens
 7: give the view for user to see orders with several filters
 
 
-first lets handle order book matching problems
+make one open enpoint ot return all orders and forget about getting orders prperly for now
+
+forget about settling the orders 
+forget about moving the balance from user hd wallet to the app wallet
+forget about moving the balance from app wallet to user hd wallet when he want to retrieve
+
+complete the flow of registering orders and then we go on and handle what you have been forgetting
+so to get you hands dirty on the code return all orders without any consideration
 
 
+
+
+for this to work do these:
+
+
+2_add an other to move from there to app wallet and increase the free amount
+3_add an other to call and move from app wallet to userwallet based on free amount
+
+
+4_complete the order settling
 
 
 

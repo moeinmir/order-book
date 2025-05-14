@@ -32,3 +32,12 @@ class ChargeTokenResponseSerializer(serializers.Serializer):
     token_id = serializers.CharField(max_length=100)
     free_amount = serializers.CharField(max_length=100)
     tx = serializers.CharField(max_length=100)
+
+class MoveTokenToHdWalletRequestSerializer(serializers.Serializer):
+    amount_to_be_moved = serializers.CharField(max_length=100)
+    
+class MoveTokenToHdWalletResponseSerializer(serializers.Serializer):
+    moved_amount = serializers.CharField(max_length=50)    
+    token_id = serializers.CharField(max_length=100)
+    remaining_amount = serializers.CharField(max_length=100)
+    tx = serializers.CharField(max_length=100)
