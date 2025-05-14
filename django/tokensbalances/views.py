@@ -9,7 +9,6 @@ from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import logging
-
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
@@ -89,7 +88,6 @@ def withdraw_token(request):
         return Response(withdraw_token_response_serializer.data,status=200)
     else:    
         return Response(withdraw_token_response_serializer.data,status=400)
-    
 
 @swagger_auto_schema(
     method='post',
@@ -129,13 +127,6 @@ def charge_token(request):
     else:    
         return Response(charge_token_response_serializer.data,status=400)
     
-
-
-
-
-#transfer_from_user_credit_to_user_hd_wallet
-
-
 @swagger_auto_schema(
     method='post',
     manual_parameters=[token_id_param],

@@ -58,11 +58,11 @@ class OrderService():
                 order.type = type
                 order.direction = direction
                 order.token_pair = token_pair
-                order.limit_price = limit_price    
+                order.limit_price = limit_price  
+                order.account_balance = user_token_balance  
                 order.save()
             return (True,order)  
         
-
     def get_orders():
         return Order.objects.all()
 
@@ -142,6 +142,11 @@ class MatchOrdersService():
         
 
     def execute_batch(cls):
+
+        return
+
+    def execute_order_pair(sell_order:Order,buy_order:Order,baseAmount,pairAmount):
+
         return
 
     def execute_batches(cls):

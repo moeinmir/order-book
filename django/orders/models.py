@@ -1,6 +1,6 @@
 from django.db import models
 from accounts.models import CustomUser 
-from tokensbalances.models import Token
+from tokensbalances.models import Token, AccountBalance
 
 class TokenPair(models.Model):
     base_token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokenpairbasetoken')
@@ -67,7 +67,7 @@ class Order(models.Model):
     direction = models.CharField(choices=OrderDirection.choices)
     limit_price = models.IntegerField(default=0)
     stop_price = models.IntegerField(default=0)
-
+    account_balance = models.ForeignKey(AccountBalance,on_delete=models.CASCADE,related_name='ordertokenbalance',default=None)
     def lock_if_not(self):
         if(self.locked):
             return False
