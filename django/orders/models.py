@@ -10,32 +10,14 @@ class TokenPair(models.Model):
         unique_together = ('base_token', 'pair_token')
 
 class OrderQuerySet(models.QuerySet):
-    def active_unlocked_sell_market(self, token_pair_id):
+    def get_active_unlocked(self, token_pair_id):
         return self.filter(
             status='active',
-            direction='sell',
-            type = 'market',
             locked=False,
             token_pair = token_pair_id
         )
 
-    def active_unlocked_buy_limit(self,token_pair_id):
-            return self.filter(
-                status='active',
-                direction='sell',
-                type = 'market',
-                locked=False,
-                token_pair = token_pair_id
-            )
 
-    def active_unlocked_buy_market(self, token_pair_id):
-            return self.filter(
-                status='active',
-                direction='sell',
-                type = 'market',
-                locked=False,
-                token_pair = token_pair_id
-            )
 
 class Order(models.Model):
     class OrderType(models.TextChoices):
@@ -46,7 +28,7 @@ class Order(models.Model):
     class OrderStatus(models.TextChoices):
         ACTIVE = 'ACTIVE', 'active'
         WAITING_FOR_SETTLEMENT = 'WAITING_FOR_SETTLEMENT', 'waiting_for_settlement'
-        SETTLED = 'SETTLED','settled'
+        COMPLETED = 'COMPLETED','completed'
         CANCELED = 'CANCELED', 'canceled'
 
     class OrderDirection(models.TextChoices):
@@ -77,6 +59,10 @@ class Order(models.Model):
             self.locked = True
             self.save()
 
+    def see_if_it_is_complete_and_save(self):
+        if(self.remaining_amount==0):
+             self.status = Order.OrderStatus.COMPLETED
+        self.save()
     objects = OrderQuerySet.as_manager() 
   
     

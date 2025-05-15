@@ -29,6 +29,9 @@ class AccountBalance(models.Model):
             self.is_locked = True
             return True
 
+    def unlock_and_save(self):
+        self.is_locked = False
+        self.save()
 
     class Meta:
         unique_together = ('user', 'token')
