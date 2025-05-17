@@ -45,6 +45,7 @@ pydantic==2.11.4
 pydantic_core==2.33.2
 PyJWT==2.9.0
 PyNaCl==1.5.0
+python-dotenv==1.1.0
 pytz==2025.2
 pyunormalize==16.0.0
 PyYAML==6.0.2
