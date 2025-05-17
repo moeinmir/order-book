@@ -75,6 +75,7 @@ class MatchOrdersService():
     best_buy_price = {}
     last_sell_price = {}
     last_buy_price = {}
+    last_price = {}
     execution_batches = {}
 
 
@@ -83,128 +84,211 @@ class MatchOrdersService():
     
     @classmethod
     def initialize(cls):
-        token_pairs = OrderService.get_token_pairs()
-        for token_pair in token_pairs:
+        cls.token_pairs = OrderService.get_token_pairs()
+        for token_pair in cls.token_pairs:
             logger.info('initializing begin')
             id = token_pair.id
             cls.best_sell_price[id] = 0
             cls.best_buy_price[id] = 0
             cls.last_sell_price[id] = 0
             cls.last_buy_price[id] = 0
+            cls.last_price[id] = 0
             cls.execution_batches[id] = []
-            logger.info(f'token pairs:{token_pairs}')
+            logger.info(f'token pairs:{cls.token_pairs}')
             logger.info('initializing ended')
     
-    #we suppose these processes wont be executed together and we will find a way to do that
-    def fill_sell_market_best_interest(self,token_pair_id):
+    def fill_sell_market_best_interest(token_pair_id):
         with transaction.atomic():
-            sell_side = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell',type='market').order_by('created_at').first()
-            if not sell_side: return []
-            buy_side_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='limit').order_by('-limit_price').first()
-            buy_side_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='market').order_by('created_at').first()
-            if not buy_side_limit and not buy_side_market: return []
-            current_price = self.best_sell_price[token_pair_id]
-            limit_price = buy_side_limit.limit_price if buy_side_limit else current_price
-            current_price = limit_price if current_price < limit_price else current_price
-            amount_to_be_filled = sell_side.remaining_amount
-            limit_amount = buy_side_limit.amount if buy_side_limit else 0
-            market_amount = buy_side_market.amount if buy_side_market else 0
-            total_provided_amount = limit_amount + market_amount
-            if(market_amount==0):
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_limit.lock_if_not(): raise Exception  
-                return [((sell_side,buy_side_limit),(limit_amount,limit_price*limit_amount))]   
-            elif(limit_amount==0):
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_market.lock_if_not(): raise Exception  
-                return [((sell_side,buy_side_market),(market_amount,current_price*limit_amount))]   
-            elif(amount_to_be_filled == total_provided_amount):
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_limit.lock_if_not(): raise Exception  
-                if not buy_side_market.lock_if_not(): raise Exception  
-                return [((sell_side,buy_side_limit),(limit_amount,limit_price*limit_amount)),(sell_side,buy_side_market),(market_amount,current_price*market_amount)]
-            elif(amount_to_be_filled<=market_amount):
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_limit.lock_if_not(): raise Exception  
-                return [((sell_side,buy_side_market),(market_amount,current_price*amount_to_be_filled))]
-            elif(amount_to_be_filled>market_amount):
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_limit.lock_if_not(): raise Exception  
-                if not buy_side_market.lock_if_not(): raise Exception
-                market_amount = amount_to_be_filled - limit_amount  
-                return [((sell_side,buy_side_limit),(limit_amount,limit_price*limit_amount)),(sell_side,buy_side_market),(market_amount,current_price*market_amount)]
-            else:
-                if not sell_side.lock_if_not(): raise Exception
-                if not buy_side_limit.lock_if_not(): raise Exception  
-                return [((sell_side,buy_side_limit),(limit_amount,limit_price*limit_amount))]
-
-    def fill_buy_market_best_interest(self,token_pair_id):
-        with transaction.atomic():
-            buy_side = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='market').order_by('created_at').first()
-            if not buy_side: return []
-            sell_side_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell',type='limit').order_by('limit_price').first()
-            sell_side_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell',type='market').order_by('created_at').first()
-            if not sell_side_limit and sell_side_market: return []
-            current_price = self.best_buy_price[token_pair_id]
-            limit_price = sell_side_limit.limit_price if sell_side_limit else current_price
-            current_price = limit_price if current_price > limit_price else current_price        
-            provide_fund = buy_side.remaining_amount
-            limit_amount = sell_side_limit.amount if sell_side_limit else 0
-            market_amount = sell_side_market.amount if sell_side_market else 0
-            limit_required_fund = limit_amount*limit_price
-            market_required_fund = market_amount*current_price    
-            total_required_fund = limit_required_fund + market_required_fund
-            if(market_amount==0):
-                if not buy_side.lock_if_not(): raise Exception
-                if not sell_side_limit.lock_if_not(): raise Exception  
-                if(limit_price*limit_amount<provide_fund):            
-                    return [((sell_side_limit,buy_side),(limit_amount,limit_price*limit_amount))]                       
+            source_sell_market = Order.objects.get_active_unlocked(token_pair_id)\
+                .filter(direction='sell', type='market')\
+                .order_by('created_at').first()
+            if not source_sell_market:return []
+            target_buy_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy', type='limit').order_by('-limit_price').first()
+            target_buy_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy', type='market').order_by('created_at').first()
+            if not target_buy_limit and not target_buy_market:return []
+            source_amount = source_sell_market.remaining_amount
+            batch = []
+            if target_buy_limit and not target_buy_market:
+                price = target_buy_limit.limit_price
+                amount = min(source_amount, target_buy_limit.remaining_amount)
+                fund = amount * price
+                batch.append(((target_buy_limit, source_sell_market), (amount, fund)))
+                return batch
+            if target_buy_market:
+                last_price = MatchOrdersService.last_price[token_pair_id]
+                if not last_price or last_price <= 0:return []
+                limit_price = target_buy_limit.limit_price if target_buy_limit else 0
+                limit_amount = target_buy_limit.remaining_amount if target_buy_limit else 0
+                market_fund = target_buy_market.remaining_amount 
+                market_amount = market_fund / last_price
+                if target_buy_limit and limit_price > last_price:
+                    fillable_limit_amount = min(limit_amount, source_amount)
+                    fillable_limit_fund = fillable_limit_amount * limit_price
+                    batch.append(((target_buy_limit, source_sell_market), (fillable_limit_amount, fillable_limit_fund)))
+                    source_amount -= fillable_limit_amount
+                    if source_amount > 0:
+                        fillable_market_amount = min(market_amount, source_amount)
+                        fillable_market_fund = fillable_market_amount * last_price
+                        batch.append(((target_buy_market, source_sell_market), (fillable_market_amount, fillable_market_fund)))
                 else:
-                    return [((sell_side_limit,buy_side),(provide_fund//limit_price,provide_fund))]       
-            elif(limit_amount==0):
-                if not buy_side.lock_if_not(): raise Exception
-                if not sell_side_market.lock_if_not(): raise Exception  
-                if(current_price*market_amount<provide_fund):            
-                    return [((sell_side_market,buy_side),(market_amount,current_price*market_amount))]                       
-                else:
-                    return [((sell_side_market,buy_side),(provide_fund//current_price,provide_fund))] 
-            elif(total_required_fund<=provide_fund):
-                if not buy_side.lock_if_not(): raise Exception
-                if not sell_side_market(): raise Exception
-                if not sell_side_limit(): raise Exception
-                return [((sell_side_market,buy_side),(market_amount,current_price*market_amount)),((sell_side_limit,buy_side),(limit_amount,limit_price*limit_amount))]
-            else:
-                remaining_fund = provide_fund - current_price*market_amount
-                return [((sell_side_market,buy_side),(market_amount,current_price*market_amount)),((sell_side_limit,buy_side),(remaining_fund//limit_price,remaining_fund))]
+                    fillable_market_amount = min(market_amount, source_amount)
+                    fillable_market_fund = fillable_market_amount * last_price
+                    batch.append(((target_buy_market, source_sell_market), (fillable_market_amount, fillable_market_fund)))
+                    source_amount -= fillable_market_amount
+                    if target_buy_limit and source_amount > 0:
+                        fillable_limit_amount = min(limit_amount, source_amount)
+                        fillable_limit_fund = fillable_limit_amount * limit_price
+                        batch.append(((target_buy_limit, source_sell_market), (fillable_limit_amount, fillable_limit_fund)))
 
+            return batch
 
-    def fill_sell_limit_best_interest(self,token_pair_id):
+    def fill_buy_market_best_interest(token_pair_id):
         with transaction.atomic():
-            sell_side = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell',type='limit').order_by('limit_price').first()
-            if not sell_side: return[]
-            buy_side_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='market').order_by('created_at').first()
-            buy_side_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='limit').order_by('limit_price').first()
-            if not buy_side_limit and buy_side_market: return[]
+            source_buy_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy', type='market').order_by('created_at').first()
+            if not source_buy_market:return []
 
-    def fill_buy_limit_best_interest(self,token_pair_id):
-        return[]
+            target_sell_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell', type='limit').order_by('limit_price').first()
+            target_sell_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell', type='market').order_by('created_at').first()
+            if not target_sell_limit and not target_sell_market:return []
+            source_fund = source_buy_market.remaining_amount
+            batch = []
+            if target_sell_limit and not target_sell_market:
+                price = target_sell_limit.limit_price
+                max_amount = source_fund / price
+                amount = min(target_sell_limit.remaining_amount, max_amount)
+                fund = amount * price
+                batch.append(((target_sell_limit, source_buy_market), (amount, fund)))
+                return batch
+            if target_sell_market:
+                last_price = MatchOrdersService.last_price[token_pair_id]
+                if not last_price or last_price <= 0: return []
+                limit_price = target_sell_limit.limit_price if target_sell_limit else float('inf')
+                limit_amount = target_sell_limit.remaining_amount if target_sell_limit else 0
+                market_amount = target_sell_market.remaining_amount
+                if target_sell_limit and limit_price < last_price:
+                    fillable_limit_amount = min(limit_amount, source_fund / limit_price)
+                    fillable_limit_fund = fillable_limit_amount * limit_price
+                    batch.append(((target_sell_limit, source_buy_market), (fillable_limit_amount, fillable_limit_fund)))
+                    source_fund -= fillable_limit_fund
+                    if source_fund > 0:
+                        fillable_market_amount = min(market_amount, source_fund / last_price)
+                        fillable_market_fund = fillable_market_amount * last_price
+                        batch.append(((target_sell_market, source_buy_market), (fillable_market_amount, fillable_market_fund)))
+                else:
+                    fillable_market_amount = min(market_amount, source_fund / last_price)
+                    fillable_market_fund = fillable_market_amount * last_price
+                    batch.append(((target_sell_market, source_buy_market), (fillable_market_amount, fillable_market_fund)))
+                    source_fund -= fillable_market_fund
+                    if target_sell_limit and source_fund > 0:
+                        fillable_limit_amount = min(limit_amount, source_fund / limit_price)
+                        fillable_limit_fund = fillable_limit_amount * limit_price
+                        batch.append(((target_sell_limit, source_buy_market), (fillable_limit_amount, fillable_limit_fund)))
+            return batch
+
+
+    def fill_sell_limit_best_interest( token_pair_id):
+        with transaction.atomic():    
+            source_sell_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='sell', type='limit').order_by('limit_price').first()
+            if not source_sell_limit: return[]
+            target_buy_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy', type='limit').order_by('-limit_price').first()
+            target_buy_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy', type='market').order_by('created_at').first()
+            if not target_buy_limit and not target_buy_market: return[]
+
+            if not target_buy_limit or (target_buy_market.remaining_amount / source_sell_limit.limit_price) >= source_sell_limit.remaining_amount:
+                amount = source_sell_limit.remaining_amount
+                price = source_sell_limit.limit_price
+                fund = price * amount
+                return [((target_buy_market, source_sell_limit), (amount, fund))]
+
+            source_sell_limit_price = source_sell_limit.limit_price
+            target_buy_limit_price = target_buy_limit.limit_price
+            is_target_limit_good_for_source_limit = True if source_sell_limit_price <= target_buy_limit_price else False
+            if not target_buy_market:
+                if not is_target_limit_good_for_source_limit: return []
+                price = target_buy_limit_price
+                amount = min(target_buy_limit.remaining_amount, source_sell_limit.remaining_amount)
+                fund = price * amount
+                return [((target_buy_limit, source_sell_limit), (amount, fund))]
+            source_sell_limit_amount = source_sell_limit.remaining_amount
+            target_buy_market_fund = target_buy_market.remaining_amount
+            source_vs_market_amount = min(source_sell_limit_amount, target_buy_market_fund / source_sell_limit.limit_price)
+            source_vs_market_price = source_sell_limit.limit_price
+            source_vs_market_fund = source_vs_market_amount * source_vs_market_price
+            batch = [((target_buy_market, source_sell_limit), (source_vs_market_amount, source_vs_market_fund))]
+            source_remaining_amount = source_sell_limit_amount - source_vs_market_amount
+            if is_target_limit_good_for_source_limit and source_remaining_amount > 0:
+                amount = min(target_buy_limit.remaining_amount, source_remaining_amount)
+                price = target_buy_limit.limit_price
+                fund = amount * price
+                batch.append(((target_buy_limit, source_sell_limit), (amount, fund)))
+            return batch
+            
+
+    def fill_buy_limit_best_interest(token_pair_id):
+        with transaction.atomic():    
+            source_buy_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='limit').order_by('-limit_price').first()
+            if not source_buy_limit: return[]
+            target_sell_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='limit').order_by('limit_price').first()
+            target_sell_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='buy',type='limit').order_by('created_at').first()
+            if not target_sell_limit and not target_sell_market: return[]            
+            if not target_sell_limit or source_buy_limit.remaining_amount <= target_sell_market.remaining_amount:
+                amount = min(target_sell_market.remaining_amount,  source_buy_limit.remaining_amount)   
+                price = source_buy_limit.limit_price
+                fund = price*amount
+                return [((target_sell_market,source_buy_limit),(amount,fund))]   
+            source_buy_limit_price = source_buy_limit.limit_price
+            target_sell_limit_price = source_buy_limit.limit_price
+            is_target_limit_good_for_source_limit = False if source_buy_limit_price<target_sell_limit_price else True
+            if not target_sell_market:
+                if not is_target_limit_good_for_source_limit: return[]
+                price = target_sell_limit_price
+                amount = min(target_sell_limit.remaining_amount , source_buy_limit.remaining_amount)
+                fund = price*amount
+                return[((target_sell_limit,source_buy_limit),(amount,fund))]
+            source_buy_limit_amount = source_buy_limit.remaining_amount
+            target_buy_market_amount = target_sell_market.remaining_amount
+            source_vs_market_amount = target_buy_market_amount
+            source_remaining_amount = source_buy_limit_amount - source_vs_market_amount
+            source_vs_limit_amount = source_remaining_amount - source_vs_market_amount
+            source_vs_market_price = source_buy_limit.limit_price 
+            source_vs_limit_price = target_sell_limit.limit_price
+            source_vs_market_fund = source_vs_market_amount*source_vs_market_price
+            source_vs_limit_fund = source_vs_limit_amount*source_vs_limit_price         
+            batch = [(target_sell_market,source_buy_limit),(source_vs_market_amount,source_vs_market_fund)]
+            if is_target_limit_good_for_source_limit:
+                batch.append(((target_sell_limit,source_buy_limit),(source_vs_limit_amount,source_vs_limit_fund)))
+            return batch
 
 
     def find_matched_orders(cls):
-        for token_pair in cls.token_pairs:
-            execution_batch = cls.fill_sell_market_best_interest(token_pair.id)
-            cls.execution_batches[token_pair.id].append(execution_batch) 
-            execution_batch = cls.fill_sell_limit_best_interest(token_pair.id)
-            cls.execution_batches[token_pair.id].append(execution_batch) 
-            execution_batch = cls.fill_buy_market_best_interest(token_pair.id)
-            cls.execution_batches[token_pair.id].append(execution_batch) 
-            execution_batch = cls.fill_buy_limit_best_interest(token_pair.id)
-            cls.execution_batches[token_pair.id].append(execution_batch) 
-        
+        logger.info("finding matches")
+        logger.info(f"tokenpairs,{cls.token_pairs}")
+        while True:
+            time.sleep(2)
+            logger.info('fiding matches')
+            for token_pair in cls.token_pairs:
+                time.sleep(2)
+                logger.info(f"token_pair:{token_pair}")
+                execution_batch = cls.fill_sell_market_best_interest(token_pair.id)
+                logger.info(f"execution bach:{execution_batch}")
+                cls.execution_batches[token_pair.id]+=execution_batch 
+                logger.info(f"execution bach:{execution_batch}")
+                execution_batch = cls.fill_sell_limit_best_interest(token_pair.id)
+                logger.info(f"execution bach:{execution_batch}")
+                cls.execution_batches[token_pair.id]+=execution_batch
+                execution_batch = cls.fill_buy_market_best_interest(token_pair.id)
+                logger.info(f"execution bach:{execution_batch}")
+                cls.execution_batches[token_pair.id]+=execution_batch
+                execution_batch = cls.fill_buy_limit_best_interest(token_pair.id)
+                logger.info(f"execution bach:{execution_batch}")
+                cls.execution_batches[token_pair.id]+=execution_batch 
+            
 
     def execute_batch(execution_batch):
         for (sell_order,buy_order),(pair_amount,base_amount) in execution_batch:
+            last_price = pair_amount//base_amount
             MatchOrdersService.execute_order_pair(sell_order,buy_order,pair_amount,base_amount)
+            MatchOrdersService.last_price[sell_order.token_pair.id] = last_price
 
     def execute_order_pair(sell_order:Order,buy_order:Order,pairAmount,baseAmount):
         sell_required_account_balance = sell_order.required_token_account_balance
@@ -236,7 +320,12 @@ class MatchOrdersService():
         logger.info("calling")
         while True:
             for token_pair in cls.token_pairs:
-                current_batch = cls.execution_batches[token_pair.id].pop()
+                time.sleep(2)
+                logger.info(f'token_pair:{token_pair}')
+                current_batch = cls.execution_batches[token_pair.id].pop() if  len(cls.execution_batches[token_pair.id]) > 0 else None 
+                logger.info(f'current_batch:{current_batch}')
+                if not current_batch: 
+                    continue
                 cls.execute_batch(current_batch)
             
     @classmethod
