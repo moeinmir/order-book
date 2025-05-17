@@ -1,25 +1,43 @@
 from django.shortcuts import render
-
-# Create your views here.
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer
+from .serializers import RegisterRequestSerializer
+from .serializers import RegisterResponseSerializer
+from .serializers import GetUserAccountInformationSerializer
 from rest_framework.permissions import IsAuthenticated
-
-from rest_framework.permissions import IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from bip_utils import Bip44Changes
+from .services import UserService
+from rest_framework.decorators import api_view, permission_classes
 
-class RegisterView(APIView):
-    @swagger_auto_schema(request_body=RegisterSerializer)
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User registered"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@swagger_auto_schema(
+    method='post',
+    request_body=RegisterRequestSerializer,
+    responses={201: RegisterResponseSerializer}
+)
+@api_view(['POST'])
+def register(request):
+    register_serializer_request = RegisterRequestSerializer(data=request.data)
+    if register_serializer_request.is_valid():
+        user = UserService.create_user(register_serializer_request.validated_data)
+        register_response_serializer = RegisterResponseSerializer(user)
+        return Response({"message": "User registered", "user":register_response_serializer.data }, status=201)
+    return Response(register_serializer_request.errors, status=400)
+
+@swagger_auto_schema(
+    method='get',
+    responses={200:GetUserAccountInformationSerializer }
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_account_information(request):
+    user = request.user
+    response = GetUserAccountInformationSerializer(user)
+    return Response({"message": "User Information", "user":response.data }, status=200)
+
+
+##########################################################################
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -35,11 +53,11 @@ class MeView(APIView):
     
 
 
-class AdminOnlyView(APIView):
-    permission_classes = [IsAdminUser]
+# class AdminOnlyView(APIView):
+#     permission_classes = [IsAdminUser]
 
-    def get(self, request):
-        return Response({"message": "You are an admin!"})
+#     def get(self, request):
+#         return Response({"message": "You are an admin!"})
 
 
 
@@ -62,12 +80,12 @@ from rest_framework.response import Response
 from .models import CustomUser
 
 
-class UserBalanceView(APIView):
-    def get(self, request):
-        user = CustomUser.objects.get(id=3)
-        eth_address = user.eth_address
-        balance = get_eth_balance(eth_address)
-        return Response({"user_id": user.id, "eth_address": eth_address, "balance": str(balance)})
+# class UserBalanceView(APIView):
+#     def get(self, request):
+#         user = CustomUser.objects.get(id=3)
+#         eth_address = user.eth_address
+#         balance = get_eth_balance(eth_address)
+#         return Response({"user_id": user.id, "eth_address": eth_address, "balance": str(balance)})
 
 
 from web3 import Web3
@@ -112,17 +130,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import CustomUser
 
-class SendEthView(APIView):
-    def post(self, request):
-        to_address = request.data.get("to")
-        if not to_address:
-            return Response({"error": "Missing 'to' address"}, status=400)
+# class SendEthView(APIView):
+#     def post(self, request):
+#         to_address = request.data.get("to")
+#         if not to_address:
+#             return Response({"error": "Missing 'to' address"}, status=400)
 
-        try:
-            tx_hash = send_eth(from_index=CustomUser.objects.get(id=3).eth_index, to_address=to_address, amount_eth=0.0005)
-            return Response({"tx_hash": tx_hash})
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#         try:
+#             tx_hash = send_eth(from_index=CustomUser.objects.get(id=3).eth_index, to_address=to_address, amount_eth=0.0005)
+#             return Response({"tx_hash": tx_hash})
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 ERC20_ABI = [
@@ -160,8 +178,8 @@ def get_user_token_balance(user_eth_address: str, token_address: str) -> int:
     balance = contract.functions.balanceOf(Web3.to_checksum_address(user_eth_address)).call()
     return balance
 
-user = CustomUser.objects.get(id=3)
-balance = get_user_token_balance(user.eth_address, "0x216cb9acB601474b2b27ee0BbaFc94c1C7148577")
+# user = CustomUser.objects.get(id=3)
+# balance = get_user_token_balance(user.eth_address, "0x216cb9acB601474b2b27ee0BbaFc94c1C7148577")
 
 
 def transfer_token_from_user(user, to_address: str, amount: int, token_address: str) -> str:
@@ -209,15 +227,15 @@ def derive_eth_address(user_index: int) -> dict:
     }
 
 
-@api_view(['POST'])
-def send_token(request):
-    user = CustomUser.objects.get(id=3)
-    to = request.data.get("to")
-    amount = int(request.data.get("amount"))  # In smallest unit, e.g., wei
-    token = request.data.get("token")
+# @api_view(['POST'])
+# def send_token(request):
+#     user = CustomUser.objects.get(id=3)
+#     to = request.data.get("to")
+#     amount = int(request.data.get("amount"))  # In smallest unit, e.g., wei
+#     token = request.data.get("token")
 
-    tx = transfer_token_from_user(user, to, amount, token)
-    return Response({"tx_hash": tx})
+#     tx = transfer_token_from_user(user, to, amount, token)
+#     return Response({"tx_hash": tx})
 
 
 from rest_framework.decorators import api_view
