@@ -3,7 +3,7 @@ from accounts.models import CustomUser
 
 class Token(models.Model):
     class TokenType(models.TextChoices):
-        ERC20 = "ERC20", "ERC-20 Token"
+        ERC20 = "ERC20"
 
     address = models.CharField(max_length=42, unique=True)  # Ethereum address length
     type = models.CharField(max_length=10, choices=TokenType.choices, default=TokenType.ERC20)

@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import CustomUser 
 from tokensbalances.models import Token, AccountBalance
+from django.db import transaction
 
 class TokenPair(models.Model):
     base_token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokenpairbasetoken')
@@ -12,28 +13,25 @@ class TokenPair(models.Model):
 class OrderQuerySet(models.QuerySet):
     def get_active_unlocked(self, token_pair_id):
         return self.filter(
-            status='active',
+            status='ACTIVE',
             locked=False,
             token_pair = token_pair_id
         )
-
-
-
 class Order(models.Model):
-    class OrderType(models.TextChoices):
-        LIMIT = "LIMIT", "limit"
-        MARKET = "MARKET", "market"
+    class OrderType(models.TextChoices):            
+        LIMIT = "LIMIT"
+        MARKET = "MARKET"
 
 
     class OrderStatus(models.TextChoices):
-        ACTIVE = 'ACTIVE', 'active'
-        WAITING_FOR_SETTLEMENT = 'WAITING_FOR_SETTLEMENT', 'waiting_for_settlement'
-        COMPLETED = 'COMPLETED','completed'
-        CANCELED = 'CANCELED', 'canceled'
+        ACTIVE = 'ACTIVE'
+        WAITING_FOR_EXECUTION = 'WAITING_FOR_EXECUTION'
+        COMPLETED = 'COMPLETED'
+        CANCELED = 'CANCELED'
 
     class OrderDirection(models.TextChoices):
-        BUY = 'BUY', 'buy'
-        SELL = 'SELL', 'sell'
+        BUY = 'BUY'
+        SELL = 'SELL'
 
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name='orderuser')
     status = models.CharField(choices=OrderStatus.choices, default=OrderStatus.ACTIVE)
@@ -51,7 +49,13 @@ class Order(models.Model):
     stop_price = models.IntegerField(default=0)
     required_token_account_balance = models.ForeignKey(AccountBalance,on_delete=models.CASCADE,related_name='orderrequiredtokenaccountbalance',default=None)
     other_token_account_balance = models.ForeignKey(AccountBalance,on_delete=models.CASCADE,related_name='orderothertokenaccountbalance',default=None)
-     
+
+    def atomic_change_status_active_to_waiting_for_execution(self):
+        if self.status != Order.OrderStatus.ACTIVE:
+            raise Exception
+        self.status = Order.OrderStatus.WAITING_FOR_EXECUTION
+        self.save()
+
     def lock_if_not(self):
         if(self.locked):
             return False
@@ -62,6 +66,8 @@ class Order(models.Model):
     def see_if_it_is_complete_and_save(self):
         if(self.remaining_amount==0):
              self.status = Order.OrderStatus.COMPLETED
+        else:
+            self.status = Order.OrderStatus.ACTIVE     
         self.save()
     objects = OrderQuerySet.as_manager() 
   
