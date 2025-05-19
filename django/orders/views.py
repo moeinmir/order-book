@@ -36,11 +36,11 @@ def add_order_for_me(request):
     
     amount = add_order_request_serializer.data['amount']
     logger.info(f'amount:{amount}')
-    type = add_order_request_serializer.data['amount']
+    type = add_order_request_serializer.data['type']
     logger.info(f'type:{type}')
     direction = add_order_request_serializer.data['direction']
     logger.info(f'direction:{direction}')
-    limit_price = add_order_request_serializer.data['limit_price']
+    limit_price = add_order_request_serializer.validated_data.get('limit_price')
     logger.info(f'limit_price:{limit_price}')
     token_pair_id = add_order_request_serializer.data['token_pair_id']
     logger.info(f'token_pair_id:{token_pair_id}')

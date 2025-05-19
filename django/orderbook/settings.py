@@ -116,7 +116,7 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "INFO",
+        "level": "DEBUG",
     },
 }
 CENTRAL_HD_WALLET_ADDRESS = os.environ.get("CENTRAL_HD_WALLET_ADDRESS")

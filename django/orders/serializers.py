@@ -12,7 +12,7 @@ class AddOrderRequestSerializer(serializers.Serializer):
     amount = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=100)
     direction = serializers.CharField(max_length=100)
-    limit_price = serializers.CharField(max_length=100)
+    limit_price = serializers.CharField(max_length=100, default= 0)
     token_pair_id = serializers.IntegerField()
 
 class AddOrderResponseSerializer(serializers.ModelSerializer):
