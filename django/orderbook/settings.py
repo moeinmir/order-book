@@ -22,7 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'testapp',
     'tokensbalances',
     'orders',
     'rest_framework',
