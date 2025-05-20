@@ -104,7 +104,7 @@ class MatchOrdersService():
     _lock = Lock()
 
     @classmethod
-    # @log_variables_and_return
+    @log_variables_and_return
     def initialize(cls):
         cls.token_pairs = OrderService.get_token_pairs()
         for token_pair in cls.token_pairs:
@@ -120,7 +120,7 @@ class MatchOrdersService():
             logger.info('initializing ended')
     
     @atomic_change_status_active_to_waiting_for_execution_wrapper
-    # @log_variables_and_return
+    @log_variables_and_return
     def fill_sell_market_best_interest(token_pair_id):
         with transaction.atomic():
             source_sell_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='SELL', type='MARKET').order_by('created_at').first()
@@ -163,7 +163,7 @@ class MatchOrdersService():
                         batch.append(((target_buy_limit, source_sell_market), (fillable_limit_amount, fillable_limit_fund)))
             return batch
     @atomic_change_status_active_to_waiting_for_execution_wrapper
-    # @log_variables_and_return
+    @log_variables_and_return
     def fill_buy_market_best_interest(token_pair_id):
         with transaction.atomic():
             source_buy_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='BUY', type='MARKET').order_by('created_at').first()
@@ -206,7 +206,7 @@ class MatchOrdersService():
                         batch.append(((target_sell_limit, source_buy_market), (fillable_limit_amount, fillable_limit_fund)))
             return batch
     @atomic_change_status_active_to_waiting_for_execution_wrapper
-    # @log_variables_and_return
+    @log_variables_and_return
     def fill_sell_limit_best_interest( token_pair_id):
         with transaction.atomic():    
             source_sell_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='SELL', type='LIMIT').order_by('limit_price').first()
@@ -244,7 +244,7 @@ class MatchOrdersService():
                 batch.append(((target_buy_limit, source_sell_limit), (amount, fund)))
             return batch
     @atomic_change_status_active_to_waiting_for_execution_wrapper
-    # @log_variables_and_return        
+    @log_variables_and_return        
     def fill_buy_limit_best_interest(token_pair_id):
         with transaction.atomic():    
             source_buy_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='BUY',type='LIMIT').order_by('-limit_price').first()
@@ -280,7 +280,7 @@ class MatchOrdersService():
                 batch.append(((target_sell_limit,source_buy_limit),(source_vs_limit_amount,source_vs_limit_fund)))
             return batch
     @classmethod
-    # @log_variables_and_return
+    @log_variables_and_return
     def find_matched_orders(cls,token_pair):
         logger.info("finding matches")
         logger.info(f"tokenpair,{token_pair}")
@@ -317,7 +317,7 @@ class MatchOrdersService():
 
 
     @classmethod
-    # @log_variables_and_return
+    @log_variables_and_return
     def find_matched_orders_parallel(cls):
         with ThreadPoolExecutor(max_workers=len(cls.token_pairs)) as executor:
             futures = []
@@ -375,7 +375,7 @@ class MatchOrdersService():
         
 
     @classmethod
-    # @log_variables_and_return
+    @log_variables_and_return
     def execute_batch_worker(cls, token_pair):
         logger.info("execution batch worker")
         while True:
@@ -394,7 +394,7 @@ class MatchOrdersService():
                 logger.error(f"Error processing batch for {token_pair}: {e}")
 
     @classmethod
-    # @log_variables_and_return
+    @log_variables_and_return
     def execute_batches_parallel(cls):
         with ThreadPoolExecutor(max_workers=len(cls.token_pairs)) as executor:
             futures = []
@@ -408,4 +408,4 @@ class MatchOrdersService():
             with ThreadPoolExecutor(max_workers=2) as executor:
                 executor.submit(cls.find_matched_orders_parallel)
                 executor.submit(cls.execute_batches_parallel)
-                # wait([future_find, future_execute])
+                
