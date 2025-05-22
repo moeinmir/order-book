@@ -73,6 +73,10 @@ class OrderService():
         
     def get_orders():
         return Order.objects.all()
+    
+    def get_order_by_id(order_id):
+        return Order.objects.get(id=order_id)
+
 
 @staticmethod
 def atomic_change_status_active_to_waiting_for_execution_wrapper(func):
@@ -142,7 +146,7 @@ class MatchOrdersService():
                 limit_price = target_buy_limit.limit_price if target_buy_limit else 0
                 limit_amount = target_buy_limit.remaining_amount if target_buy_limit else 0
                 market_fund = target_buy_market.remaining_amount 
-                market_amount = market_fund / last_price
+                market_amount = market_fund // last_price
                 if target_buy_limit and limit_price > last_price:
                     fillable_limit_amount = min(limit_amount, source_amount)
                     fillable_limit_fund = fillable_limit_amount * limit_price
@@ -276,7 +280,7 @@ class MatchOrdersService():
             source_vs_market_fund = source_vs_market_amount*source_vs_market_price
             source_vs_limit_fund = source_vs_limit_amount*source_vs_limit_price         
             batch = [(target_sell_market,source_buy_limit),(source_vs_market_amount,source_vs_market_fund)]
-            if is_target_limit_good_for_source_limit:
+            if is_target_limit_good_for_source_limit and source_vs_limit_fund>0 and source_vs_limit_amount>0:
                 batch.append(((target_sell_limit,source_buy_limit),(source_vs_limit_amount,source_vs_limit_fund)))
             return batch
     @classmethod
@@ -328,13 +332,13 @@ class MatchOrdersService():
     @log_variables_and_return
     def execute_batch(cls,execution_batch):
         logger.info(f"executing batch:{execution_batch}")
-        for (sell_order,buy_order),(pair_amount,base_amount) in execution_batch:
+        for (buy_order,sell_order),(pair_amount,base_amount) in execution_batch:
             
             logger.info(f"executing batch sell order:{sell_order}")
             logger.info(f"executing batch buy order:{buy_order}")
             logger.info(f"executing batch pair amount:{pair_amount}")
             logger.info(f"executing batch base amount:{base_amount}")
-            last_price = pair_amount//base_amount
+            last_price = base_amount//pair_amount
             
             cls.execute_order_pair(sell_order,buy_order,pair_amount,base_amount)
             cls.last_price[sell_order.token_pair.id] = last_price
@@ -348,24 +352,33 @@ class MatchOrdersService():
         logger.info(f"sell order: {pairAmount}")
         logger.info(f"sell order: {baseAmount}")
 
+        sell_order = OrderService.get_order_by_id(sell_order.id)
+        buy_order = OrderService.get_order_by_id(buy_order.id)
+
         sell_required_account_balance = sell_order.required_token_account_balance
         logger.info(f"sellorderrequiredaccountbalance:{sell_required_account_balance}")
         sell_other_account_balance = sell_order.other_token_account_balance
         buy_required_account_balance = buy_order.required_token_account_balance
         buy_other_account_balance = buy_order.other_token_account_balance
-        if not sell_required_account_balance.lock_if_not(): raise Exception
-        # if not sell_other_account_balance.lock_if_not(): raise Exception
-        if not buy_required_account_balance.lock_if_not(): raise Exception
-        # if not sell_other_account_balance.lock_if_not(): raise Exception
+        
+        for order in {sell_required_account_balance,sell_other_account_balance,buy_required_account_balance,sell_other_account_balance}:
+            if not order.lock_if_not():raise Exception
         sell_required_account_balance.locked_amount = sell_required_account_balance.locked_amount - pairAmount
         sell_other_account_balance.free_amount = sell_other_account_balance.free_amount + baseAmount
         buy_required_account_balance.locked_amount = buy_other_account_balance.locked_amount - baseAmount
         buy_other_account_balance.free_amount = buy_other_account_balance.free_amount + pairAmount
         sell_order.remaining_amount = sell_order.remaining_amount - pairAmount
+        sell_order.filled_amount = sell_order.filled_amount + pairAmount
         if (buy_order.OrderType == Order.OrderType.LIMIT):
             buy_order.remaining_amount = buy_order.remaining_amount - pairAmount
+            buy_order.filled_amount = buy_order.filled_amount + pairAmount
         else:
-            buy_order.remaining_amount = buy_order.remaining_amount - baseAmount   
+            buy_order.remaining_amount = buy_order.remaining_amount - baseAmount
+            buy_order.filled_amount = buy_order.filled_amount + baseAmount
+        if(sell_order.remaining_amount<0):
+            logger.info(f"remaining amount:{sell_order.remaining_amount}") 
+        if(buy_order.remaining_amount<0):
+            logger.info(f"remaining amount:{buy_order.remaining_amount}")
         sell_order.see_if_it_is_complete_and_save()
         buy_order.see_if_it_is_complete_and_save()    
         sell_required_account_balance.unlock_and_save()
