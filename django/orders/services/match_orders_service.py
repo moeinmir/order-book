@@ -96,7 +96,7 @@ class MatchOrdersService():
                 max_amount = source_fund / price
                 amount = min(target_sell_limit.remaining_amount, max_amount)
                 fund = amount * price
-                batch.append(((target_sell_limit, source_buy_market), (amount, fund)))
+                batch.append(((source_buy_market, target_sell_limit ), (amount, fund)))
                 return batch
             if target_sell_market:
                 last_price = RedisClient.get_item(token_pair_id)
@@ -107,12 +107,12 @@ class MatchOrdersService():
                 if target_sell_limit and limit_price < last_price:
                     fillable_limit_amount = min(limit_amount, source_fund / limit_price)
                     fillable_limit_fund = fillable_limit_amount * limit_price
-                    batch.append(((target_sell_limit, source_buy_market), (fillable_limit_amount, fillable_limit_fund)))
+                    batch.append(((source_buy_market,target_sell_limit ), (fillable_limit_amount, fillable_limit_fund)))
                     source_fund -= fillable_limit_fund
                     if source_fund > 0:
                         fillable_market_amount = min(market_amount, source_fund / last_price)
                         fillable_market_fund = fillable_market_amount * last_price
-                        batch.append(((target_sell_market, source_buy_market), (fillable_market_amount, fillable_market_fund)))
+                        batch.append(((source_buy_market, target_sell_market), (fillable_market_amount, fillable_market_fund)))
                 else:
                     fillable_market_amount = min(market_amount, source_fund / last_price)
                     fillable_market_fund = fillable_market_amount * last_price
@@ -121,7 +121,7 @@ class MatchOrdersService():
                     if target_sell_limit and source_fund > 0:
                         fillable_limit_amount = min(limit_amount, source_fund / limit_price)
                         fillable_limit_fund = fillable_limit_amount * limit_price
-                        batch.append(((target_sell_limit, source_buy_market), (fillable_limit_amount, fillable_limit_fund)))
+                        batch.append(((source_buy_market, target_sell_limit ), (fillable_limit_amount, fillable_limit_fund)))
             return batch
     
     @atomic_change_status_active_to_waiting_for_execution_wrapper
@@ -176,7 +176,7 @@ class MatchOrdersService():
                 amount = min(target_sell_market.remaining_amount,  source_buy_limit.remaining_amount)   
                 price = source_buy_limit.limit_price
                 fund = price*amount
-                return [((target_sell_market,source_buy_limit),(amount,fund))]   
+                return [((source_buy_limit, target_sell_market),(amount,fund))]   
             source_buy_limit_price = source_buy_limit.limit_price
             target_sell_limit_price = source_buy_limit.limit_price
             is_target_limit_good_for_source_limit = False if source_buy_limit_price<target_sell_limit_price else True
@@ -185,7 +185,7 @@ class MatchOrdersService():
                 price = target_sell_limit_price
                 amount = min(target_sell_limit.remaining_amount , source_buy_limit.remaining_amount)
                 fund = price*amount
-                return[((target_sell_limit,source_buy_limit),(amount,fund))]
+                return[((source_buy_limit, target_sell_limit),(amount,fund))]
             source_buy_limit_amount = source_buy_limit.remaining_amount
             target_buy_market_amount = target_sell_market.remaining_amount
             source_vs_market_amount = target_buy_market_amount
@@ -197,7 +197,7 @@ class MatchOrdersService():
             source_vs_limit_fund = source_vs_limit_amount*source_vs_limit_price         
             batch = [(target_sell_market,source_buy_limit),(source_vs_market_amount,source_vs_market_fund)]
             if is_target_limit_good_for_source_limit and source_vs_limit_fund>0 and source_vs_limit_amount>0:
-                batch.append(((target_sell_limit,source_buy_limit),(source_vs_limit_amount,source_vs_limit_fund)))
+                batch.append(((source_buy_limit, target_sell_limit),(source_vs_limit_amount,source_vs_limit_fund)))
             return batch
 
 

@@ -56,7 +56,7 @@ class ScheduleExecuteMatchedOrders():
         buy_other_account_balance.free_amount = buy_other_account_balance.free_amount + pair_amount
         sell_order.remaining_amount = sell_order.remaining_amount - pair_amount
         sell_order.filled_amount = sell_order.filled_amount + pair_amount
-        if (buy_order.OrderType == Order.OrderType.LIMIT):
+        if (buy_order.type == Order.OrderType.LIMIT):
             buy_order.remaining_amount = buy_order.remaining_amount - pair_amount
             buy_order.filled_amount = buy_order.filled_amount + pair_amount
         else:
