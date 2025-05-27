@@ -3,6 +3,10 @@ from accounts.models import CustomUser
 from tokensbalances.models import Token, AccountBalance
 from django.db import transaction
 
+
+
+
+
 class TokenPair(models.Model):
     base_token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokenpairbasetoken')
     pair_token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='tokenpairpairtoken')
@@ -17,6 +21,8 @@ class OrderQuerySet(models.QuerySet):
             locked=False,
             token_pair = token_pair_id
         )
+
+
 class Order(models.Model):
     class OrderType(models.TextChoices):            
         LIMIT = "LIMIT"

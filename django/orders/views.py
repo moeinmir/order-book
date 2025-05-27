@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .serializers import *
-from .services import OrderService
+from .services.order_service import OrderService
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated 

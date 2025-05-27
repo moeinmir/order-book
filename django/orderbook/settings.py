@@ -120,3 +120,18 @@ LOGGING = {
 }
 CENTRAL_HD_WALLET_ADDRESS = os.environ.get("CENTRAL_HD_WALLET_ADDRESS")
 CENTRAL_HD_WALLET_INDEX = os.environ.get("CENTRAL_HD_WALLET_INDEX")
+
+
+KAFKA_CONFIG = {
+    'bootstrap.servers': 'localhost:39092',  # Your Kafka broker address
+    'group.id': 'order-matching-group',     # Consumer group ID
+    'auto.offset.reset': 'earliest',        # Start reading from earliest if no offset
+}
+
+REDIS_CONFIG = {
+    'host':"localhost",
+    'port':6379,
+    'db':0,
+    'decode_responses':True, 
+    'password':'12345678'
+}
