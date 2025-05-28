@@ -25,9 +25,6 @@ def add_order_for_me(request):
     logger.info(f'request:{request}')
     user = request.user
     logger.info(f'user: {user.id}')
-    # user = request.user
-    # response = GetUserAccountInformationSerializer(user)
-
     add_order_request_serializer = AddOrderRequestSerializer(data = request.data)  
     logger.info(f'add_order_request_serializer: {add_order_request_serializer}')  
     if not add_order_request_serializer.is_valid():

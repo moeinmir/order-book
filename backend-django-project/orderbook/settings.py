@@ -4,12 +4,11 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-
-
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # e.g., 60 minutes
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),    # e.g., 30 days
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30), 
 }
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
@@ -37,7 +36,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 ROOT_URLCONF = 'orderbook.urls'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -54,6 +55,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'orderbook.wsgi.application'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -64,7 +66,9 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -79,6 +83,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -91,8 +96,11 @@ REST_FRAMEWORK = {
     ),
 }
 APP_MNEMONIC = os.environ.get("APP_MNEMONIC")
+
 APP_COIN = "eth"
-WEB3_PROVIDER_URI = "https://sepolia.infura.io/v3/606e13ffd6df44198c4b65a8ec4461dc"
+
+WEB3_PROVIDER_URI = f"https://sepolia.infura.io/v3/{os.environ.get('SEPOLIA_INFORA_KEY')}"
+
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -103,8 +111,11 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
 MAX_BIGINT = 2**63 - 1
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -118,14 +129,15 @@ LOGGING = {
         "level": "DEBUG",
     },
 }
+
 CENTRAL_HD_WALLET_ADDRESS = os.environ.get("CENTRAL_HD_WALLET_ADDRESS")
+
 CENTRAL_HD_WALLET_INDEX = os.environ.get("CENTRAL_HD_WALLET_INDEX")
 
-
 KAFKA_CONFIG = {
-    'bootstrap.servers': 'localhost:39092',  # Your Kafka broker address
-    'group.id': 'order-matching-group',     # Consumer group ID
-    'auto.offset.reset': 'earliest',        # Start reading from earliest if no offset
+    'bootstrap.servers': 'localhost:39092', 
+    'group.id': 'order-matching-group',     
+    'auto.offset.reset': 'earliest',        
 }
 
 REDIS_CONFIG = {
@@ -135,3 +147,6 @@ REDIS_CONFIG = {
     'decode_responses':True, 
     'password':'12345678'
 }
+
+CHAIN_ID = 11155111
+ESTIMATED_GAS_FOR_ERC20_TRANSFER = 700000

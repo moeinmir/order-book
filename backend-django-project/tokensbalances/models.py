@@ -9,10 +9,7 @@ class Token(models.Model):
     type = models.CharField(max_length=10, choices=TokenType.choices, default=TokenType.ERC20)
     is_active = models.BooleanField(default=True)
     decimals = models.PositiveIntegerField(default=18)
-
-    def __str__(self):
-        return f"{self.get_type_display()} Token @ {self.address}"
-
+    
 class AccountBalance(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='accountbalanceuser')
     token = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='accaountbalancetoken')

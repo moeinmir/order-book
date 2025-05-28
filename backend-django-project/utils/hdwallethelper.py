@@ -24,6 +24,6 @@ def derive_eth_address(user_index: int) -> dict:
     )
     logger.info(f'bip44_acc:{bip44_acc}')   
     return {
-        "address": bip44_acc.PublicKey().ToAddress(), 
+        "address": bip44_acc.PublicKey().ToAddress(),
         "private_key": bip44_acc.PrivateKey().Raw().ToHex()
     }

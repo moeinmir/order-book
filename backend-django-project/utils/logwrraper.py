@@ -25,3 +25,4 @@ def log_variables_and_return(func):
             logger.error(traceback.format_exc())
             raise
     return wrapper
+

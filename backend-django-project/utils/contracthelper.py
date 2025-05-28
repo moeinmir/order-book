@@ -5,6 +5,7 @@ from django.conf import settings
 from .hdwallethelper import derive_eth_address
 w3 = Web3(Web3.HTTPProvider(settings.WEB3_PROVIDER_URI))
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +31,8 @@ def transfer_token(from_address, to_address: str, amount: int, token_address: st
     nonce = w3.eth.get_transaction_count(from_address)
     logger.info(f'nonce:{nonce}')
     tx = contract.functions.transfer(to_address, amount).build_transaction({
-        'chainId': 11155111,
-        'gas': 700000,
+        'chainId': settings.CHAIN_ID,
+        'gas': settings.ESTIMATED_GAS_FOR_ERC20_TRANSFER,
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce
     })

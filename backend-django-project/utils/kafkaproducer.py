@@ -2,10 +2,7 @@ from confluent_kafka import Producer
 from django.conf import settings
 import json
 import logging
-
-from dataclasses import dataclass, asdict
 import json
-
 logger = logging.getLogger(__file__)
 
 def send_to_kafka(topic, data):

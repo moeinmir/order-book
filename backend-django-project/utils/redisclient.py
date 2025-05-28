@@ -14,20 +14,17 @@ redis_client = redis.Redis(
     password=redis_config['password']
 )
 
-
 class RedisClient:
     redis_client = redis_client
 
     @staticmethod
     def set_item(key,value):
-
         result = redis_client.set(str(key),value)
         logger.info('result %s',result)
         return result
 
     @staticmethod
     def get_item(key):
-
         result = redis_client.get(str(key))
         logger.info('result %s',result)
         return result

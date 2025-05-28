@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from .serializers import GetTokenInformationSerializer
 from .models import Token
 from utils.contracthelper import get_token_contract, transfer_token;
 from accounts.services import UserService
@@ -8,8 +6,6 @@ from django.db import transaction
 import logging
 from django.conf import settings
 logger = logging.getLogger(__name__)
-
-
 
 class TokenBalanceService:
 
@@ -47,7 +43,6 @@ class TokenBalanceService:
             account_balance.is_locked = False 
             account_balance.save()
             return (True, account_balance)
-
 
     @staticmethod
     def fetch_withdraw_update_user_hd_wallet_balance(token_id, user_id, withdraw_amount,to_address):
@@ -135,7 +130,6 @@ class TokenBalanceService:
                 transaction.set_rollback(True)
                 return(False,account_balance,tx)    
 
-
     @staticmethod
     def transfer_from_user_credit_to_user_hd_wallet(token_id, user_id, amount_to_be_transferred):
         central_hd_wallet_address = settings.CENTRAL_HD_WALLET_ADDRESS
@@ -171,4 +165,8 @@ class TokenBalanceService:
                 return (True, account_balance,tx)
             else:
                 transaction.set_rollback(True)
-                return(False,account_balance,tx)
+                return(False,account_balance,"")
+            
+
+
+            

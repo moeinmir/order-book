@@ -1,32 +1,28 @@
-from django.test import TestCase
+# from django.test import TestCase
 
 
-from django.test import TestCase
-from .services.order_service import OrderService
-from .services.match_orders_service import MatchOrdersService
-from .services.schedule_execute_matched_orders import ScheduleExecuteMatchedOrders
-from .services.schedule_finding_matched_orders import ScheduleFindingMatchedOrders
-from utils.redisclient import RedisClient
-#here we want to write a test that try to execute orders after sending fetching them from kafka but every time
-#create a pair or orders that could match 
-#make a batch and send it with logic you already have
-#try to fetch it and consume it
-from  confluent_kafka import Consumer
-from django.conf import settings
-from dataclasses import dataclass
+# from django.test import TestCase
+# from .services.order_service import OrderService
+# from .services.match_orders_service import MatchOrdersService
+# from .services.schedule_execute_matched_orders import ScheduleExecuteMatchedOrders
+# from .services.schedule_finding_matched_orders import ScheduleFindingMatchedOrders
+# from utils.redisclient import RedisClient
+# from  confluent_kafka import Consumer
+# from django.conf import settings
+# from dataclasses import dataclass
 
-faghani_user_id = 1
-token_pair_id = 1
+# faghani_user_id = 1
+# token_pair_id = 1
 
-def test_pull_once(token_pair_id):
-    topic = str(token_pair_id)
-    consumer = Consumer(settings.KAFKA_CONFIG)
-    consumer.subscribe(['1'])
-    msg = consumer.poll(timeout=2.0)
-    consumer.close()
-    return msg
+# def test_pull_once(token_pair_id):
+#     topic = str(token_pair_id)
+#     consumer = Consumer(settings.KAFKA_CONFIG)
+#     consumer.subscribe(['1'])
+#     msg = consumer.poll(timeout=2.0)
+#     consumer.close()
+#     return msg
 
-class kafkaConsumeConnectionTest(TestCase):
+# class kafkaConsumeConnectionTest(TestCase):
     # buy_limit = OrderService.add_order(faghani_user_id,token_pair_id,10,"LIMIT","BUY",1)    
     # print(buy_limit)
     # sell_market = OrderService.add_order(faghani_user_id,token_pair_id,10,"MARKET","SELL",1)
@@ -71,102 +67,103 @@ class kafkaConsumeConnectionTest(TestCase):
     # prepared_for_execution = ScheduleExecuteMatchedOrders.reverse_execution_batch_to_be_used_in_execution(fetched_message_from_kafka)
     # print(prepared_for_execution)    
     # ScheduleExecuteMatchedOrders.execute_batch(prepared_for_execution)
-    pass    
+    # pass    
     
 
-@dataclass
-class AddOrderData:
-    user_id: int
-    token_pair_id: int
-    amount: int
-    type: str
-    direction: str
-    price: str
+# @dataclass
+# class AddOrderData:
+#     user_id: int
+#     token_pair_id: int
+#     amount: int
+#     type: str
+#     direction: str
+#     price: str
 
 
-class FindAllMatchedTest(TestCase):
+# class FindAllMatchedTest(TestCase):
 
-    price_is_1_scenario = [
-        AddOrderData(1,1,10,"LIMIT","BUY",1),
-        AddOrderData(1,1,10,"LIMIT","BUY",1),
-        AddOrderData(1,1,10,"LIMIT","BUY",1),
-        AddOrderData(1,1,10,"LIMIT","BUY",1),
+#     price_is_1_scenario = [
+#         AddOrderData(1,1,10,"LIMIT","BUY",1),
+#         AddOrderData(1,1,10,"LIMIT","BUY",1),
+#         AddOrderData(1,1,10,"LIMIT","BUY",1),
+#         AddOrderData(1,1,10,"LIMIT","BUY",1),
 
-        AddOrderData(1,1,10,"MARKET","SELL",1),
-        AddOrderData(1,1,10,"MARKET","SELL",1),
-        AddOrderData(1,1,10,"MARKET","SELL",1),
-        AddOrderData(1,1,10,"MARKET","SELL",1),
+#         AddOrderData(1,1,10,"MARKET","SELL",1),
+#         AddOrderData(1,1,10,"MARKET","SELL",1),
+#         AddOrderData(1,1,10,"MARKET","SELL",1),
+#         AddOrderData(1,1,10,"MARKET","SELL",1),
 
-        AddOrderData(1,1,10,"LIMIT","SELL",1),
-        AddOrderData(1,1,10,"LIMIT","SELL",1),
-        AddOrderData(1,1,10,"LIMIT","SELL",1),
-        AddOrderData(1,1,10,"LIMIT","SELL",1),
+#         AddOrderData(1,1,10,"LIMIT","SELL",1),
+#         AddOrderData(1,1,10,"LIMIT","SELL",1),
+#         AddOrderData(1,1,10,"LIMIT","SELL",1),
+#         AddOrderData(1,1,10,"LIMIT","SELL",1),
         
-        AddOrderData(1,1,10,"MARKET","BUY",1),
-        AddOrderData(1,1,10,"MARKET","BUY",1),
-        AddOrderData(1,1,10,"MARKET","BUY",1),
-        AddOrderData(1,1,10,"MARKET","BUY",1),
-    ]
+#         AddOrderData(1,1,10,"MARKET","BUY",1),
+#         AddOrderData(1,1,10,"MARKET","BUY",1),
+#         AddOrderData(1,1,10,"MARKET","BUY",1),
+#         AddOrderData(1,1,10,"MARKET","BUY",1),
+#     ]
 
 
-    price_is_2_scenario = [
-        AddOrderData(1,1,10,"LIMIT","BUY",2),
-        AddOrderData(1,1,10,"LIMIT","BUY",2),
-        AddOrderData(1,1,10,"LIMIT","BUY",2),
-        AddOrderData(1,1,10,"LIMIT","BUY",2),
+#     price_is_2_scenario = [
+#         AddOrderData(1,1,10,"LIMIT","BUY",2),
+#         AddOrderData(1,1,10,"LIMIT","BUY",2),
+#         AddOrderData(1,1,10,"LIMIT","BUY",2),
+#         AddOrderData(1,1,10,"LIMIT","BUY",2),
 
-        AddOrderData(1,1,10,"MARKET","SELL",2),
-        AddOrderData(1,1,10,"MARKET","SELL",2),
-        AddOrderData(1,1,10,"MARKET","SELL",2),
-        AddOrderData(1,1,10,"MARKET","SELL",2),
+#         AddOrderData(1,1,10,"MARKET","SELL",2),
+#         AddOrderData(1,1,10,"MARKET","SELL",2),
+#         AddOrderData(1,1,10,"MARKET","SELL",2),
+#         AddOrderData(1,1,10,"MARKET","SELL",2),
 
-        AddOrderData(1,1,10,"LIMIT","SELL",2),
-        AddOrderData(1,1,10,"LIMIT","SELL",2),
-        AddOrderData(1,1,10,"LIMIT","SELL",2),
-        AddOrderData(1,1,10,"LIMIT","SELL",2),
+#         AddOrderData(1,1,10,"LIMIT","SELL",2),
+#         AddOrderData(1,1,10,"LIMIT","SELL",2),
+#         AddOrderData(1,1,10,"LIMIT","SELL",2),
+#         AddOrderData(1,1,10,"LIMIT","SELL",2),
         
-        AddOrderData(1,1,20,"MARKET","BUY",2),
-        AddOrderData(1,1,20,"MARKET","BUY",2),
-        AddOrderData(1,1,20,"MARKET","BUY",2),
-        AddOrderData(1,1,20,"MARKET","BUY",2),
-    ]
+#         AddOrderData(1,1,20,"MARKET","BUY",2),
+#         AddOrderData(1,1,20,"MARKET","BUY",2),
+#         AddOrderData(1,1,20,"MARKET","BUY",2),
+#         AddOrderData(1,1,20,"MARKET","BUY",2),
+#     ]
 
-    price_is_3_scenario_filling_in_3_steps = [
+#     price_is_3_scenario_filling_in_3_steps = [
 
-        AddOrderData(1,1,20,"MARKET","SELL",3),
-        AddOrderData(1,1,20,"MARKET","SELL",3),
-        AddOrderData(1,1,20,"MARKET","SELL",3),
-        AddOrderData(1,1,20,"MARKET","SELL",3),
+#         AddOrderData(1,1,20,"MARKET","SELL",3),
+#         AddOrderData(1,1,20,"MARKET","SELL",3),
+#         AddOrderData(1,1,20,"MARKET","SELL",3),
+#         AddOrderData(1,1,20,"MARKET","SELL",3),
 
-        AddOrderData(1,1,20,"LIMIT","SELL",3),
-        AddOrderData(1,1,20,"LIMIT","SELL",3),
-        AddOrderData(1,1,20,"LIMIT","SELL",3),
-        AddOrderData(1,1,20,"LIMIT","SELL",3),
+#         AddOrderData(1,1,20,"LIMIT","SELL",3),
+#         AddOrderData(1,1,20,"LIMIT","SELL",3),
+#         AddOrderData(1,1,20,"LIMIT","SELL",3),
+#         AddOrderData(1,1,20,"LIMIT","SELL",3),
         
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
 
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
 
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
-        AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
+#         AddOrderData(1,1,30,"MARKET","BUY",3),
 
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
-        AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
+#         AddOrderData(1,1,10,"LIMIT","BUY",3),
 
-    ]
+#     ]
 
 
-    for order in price_is_3_scenario_filling_in_3_steps:
-        OrderService.add_order(order.user_id,order.token_pair_id,order.amount,order.type,order.direction,order.price)
+#     for order in price_is_3_scenario_filling_in_3_steps:
+#         OrderService.add_order(order.user_id,order.token_pair_id,order.amount,order.type,order.direction,order.price)
+
 
 

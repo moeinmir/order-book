@@ -17,7 +17,7 @@ schema_view = get_schema_view(
     openapi.Info(
         title="Order Book",
         default_version='v1',
-        description="API Documentation for Crytpo Order Book",
+        description="API Documentation for Crypto Order Book",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
