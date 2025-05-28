@@ -10,6 +10,12 @@
 3. Redis for specific use cases
 
 To spin up the required services, navigate to the compose/allatonce directory and run:
+
+```
+sudo docker-compose up
+```
+But Before that
+
 ```
 cd compose/kafka/kafka-kraft
 ```
