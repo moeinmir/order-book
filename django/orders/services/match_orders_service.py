@@ -1,20 +1,13 @@
 from ..models import TokenPair
 from ..models import Order
-from tokensbalances.models import AccountBalance
 from django.db import transaction
-from accounts.services import UserService
-import logging
-import time
-from threading import Lock
-from queue import Queue
-from concurrent.futures import ThreadPoolExecutor, wait
-logger = logging.getLogger(__name__)
-import queue
 from functools import wraps
 from utils.logwrraper import log_variables_and_return
 from utils.kafkaproducer import *
 from .order_service import OrderService
 from utils.redisclient import RedisClient
+logger = logging.getLogger(__name__)
+import logging
 
 @staticmethod
 def atomic_change_status_active_to_waiting_for_execution_wrapper(func):
@@ -55,7 +48,8 @@ class MatchOrdersService():
                 return batch
             if target_buy_market:
                 last_price = RedisClient.get_item(token_pair_id)
-                if not last_price or last_price <= 0:return []
+                if not last_price:return []
+                last_price = int(last_price)
                 limit_price = target_buy_limit.limit_price if target_buy_limit else 0
                 limit_amount = target_buy_limit.remaining_amount if target_buy_limit else 0
                 market_fund = target_buy_market.remaining_amount 
@@ -100,7 +94,8 @@ class MatchOrdersService():
                 return batch
             if target_sell_market:
                 last_price = RedisClient.get_item(token_pair_id)
-                if not last_price or last_price <= 0: return []
+                if not last_price: return []
+                last_price = int(last_price)
                 limit_price = target_sell_limit.limit_price if target_sell_limit else float('inf')
                 limit_amount = target_sell_limit.remaining_amount if target_sell_limit else 0
                 market_amount = target_sell_market.remaining_amount
@@ -116,7 +111,7 @@ class MatchOrdersService():
                 else:
                     fillable_market_amount = min(market_amount, source_fund / last_price)
                     fillable_market_fund = fillable_market_amount * last_price
-                    batch.append(((target_sell_market, source_buy_market), (fillable_market_amount, fillable_market_fund)))
+                    batch.append(((source_buy_market,target_sell_market), (fillable_market_amount, fillable_market_fund)))
                     source_fund -= fillable_market_fund
                     if target_sell_limit and source_fund > 0:
                         fillable_limit_amount = min(limit_amount, source_fund / limit_price)
@@ -172,11 +167,11 @@ class MatchOrdersService():
             target_sell_limit = Order.objects.get_active_unlocked(token_pair_id).filter(direction='SELL',type='LIMIT').order_by('limit_price').first()
             target_sell_market = Order.objects.get_active_unlocked(token_pair_id).filter(direction='SELL',type='MARKET').order_by('created_at').first()
             if not target_sell_limit and not target_sell_market: return[]            
-            if not target_sell_limit or source_buy_limit.remaining_amount <= target_sell_market.remaining_amount:
-                amount = min(target_sell_market.remaining_amount,  source_buy_limit.remaining_amount)   
-                price = source_buy_limit.limit_price
-                fund = price*amount
-                return [((source_buy_limit, target_sell_market),(amount,fund))]   
+            if not target_sell_limit:
+                    amount = min(target_sell_market.remaining_amount,  source_buy_limit.remaining_amount)   
+                    price = source_buy_limit.limit_price
+                    fund = price*amount
+                    return [((source_buy_limit, target_sell_market),(amount,fund))]   
             source_buy_limit_price = source_buy_limit.limit_price
             target_sell_limit_price = source_buy_limit.limit_price
             is_target_limit_good_for_source_limit = False if source_buy_limit_price<target_sell_limit_price else True

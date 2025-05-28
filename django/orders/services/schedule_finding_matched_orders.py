@@ -28,58 +28,25 @@ class ScheduleFindingMatchedOrders():
                 logger.info(f"token_pair:{token_pair}")
                 execution_batch = MatchOrdersService.fill_sell_market_best_interest(token_pair.id)
                 logger.info(f"execution bach:{execution_batch}")
-                if execution_batch:
-                    send_to_kafka(
-                            topic=str(token_pair.id),
-                            # data={
-                            #     'token_pair_id': str(token_pair.id),
-                            #     'batch': cls.serialize_execution_batch(execution_batch),
-                            # }
-                            data= cls.serialize_execution_batch(execution_batch)
-                    )
+                if execution_batch:ScheduleFindingMatchedOrders.send_execution_batch_to_kafka(execution_batch,token_pair.id)
                 logger.info(f"execution bach:{execution_batch}")
             except Exception as e:
                 logger.error(f"Error matching orders {token_pair}: {e}")
             try:    
                 execution_batch = MatchOrdersService.fill_sell_limit_best_interest(token_pair.id)
                 logger.info(f"execution bach:{execution_batch}")
-                if execution_batch:
-                    send_to_kafka(
-                        topic=str(token_pair.id),
-                        # data={
-                        #     'token_pair_id': str(token_pair.id),
-                        #     'batch': cls.serialize_execution_batch(execution_batch)
-                        # }
-                        data= cls.serialize_execution_batch(execution_batch)
-                )  
+                if execution_batch:ScheduleFindingMatchedOrders.send_execution_batch_to_kafka(execution_batch,token_pair.id)
             except Exception as e:
                 logger.error(f"Error matching orders {token_pair}: {e}")
             try:   
                 execution_batch = MatchOrdersService.fill_buy_market_best_interest(token_pair.id)
                 logger.info(f"execution bach:{execution_batch}")
-                if execution_batch:
-                    send_to_kafka(
-                        topic= str(token_pair.id),
-                        # data={
-                        #     'token_pair_id': str(token_pair.id),
-                        #     'batch': cls.serialize_execution_batch(execution_batch)
-                        # }
-                        data= cls.serialize_execution_batch(execution_batch)
-                    ) 
-            except Exception as e:
-                logger.error(f"Error matching orders {token_pair}: {e}")
+                if execution_batch:ScheduleFindingMatchedOrders.send_execution_batch_to_kafka(execution_batch,token_pair.id)
+            except Exception as e:logger.error(f"Error matching orders {token_pair}: {e}")
             try:    
                 execution_batch = MatchOrdersService.fill_buy_limit_best_interest(token_pair.id)
                 logger.info(f"execution bach:{execution_batch}")
-                if execution_batch:
-                    send_to_kafka(
-                        topic= str(token_pair.id),
-                        # data={
-                        #     'token_pair_id': str(token_pair.id),
-                        #     'batch': cls.serialize_execution_batch(execution_batch)
-                        # }
-                        data= cls.serialize_execution_batch(execution_batch)
-                    )
+                if execution_batch:ScheduleFindingMatchedOrders.send_execution_batch_to_kafka(execution_batch,token_pair.id)
             except Exception as e:
                 logger.error(f"Error matching orders {token_pair}: {e}")
             logger.info("does execution batch getting filled")
@@ -93,13 +60,8 @@ class ScheduleFindingMatchedOrders():
 
     @staticmethod
     def send_execution_batch_to_kafka(execution_batch, token_pair_id):
-        
         result = ScheduleFindingMatchedOrders.prepare_execution_batch_to_be_send_to_kafka(execution_batch)
-        
-        send_to_kafka(
-            topic=str(token_pair_id),
-            data= result
-        )
+        send_to_kafka(topic=str(token_pair_id),data= result)
 
     @staticmethod
     def prepare_execution_batch_to_be_send_to_kafka(execution__batch):

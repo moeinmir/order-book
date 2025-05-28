@@ -131,7 +131,42 @@ class FindAllMatchedTest(TestCase):
         AddOrderData(1,1,20,"MARKET","BUY",2),
     ]
 
-    for order in price_is_2_scenario:
+    price_is_3_scenario_filling_in_3_steps = [
+
+        AddOrderData(1,1,20,"MARKET","SELL",3),
+        AddOrderData(1,1,20,"MARKET","SELL",3),
+        AddOrderData(1,1,20,"MARKET","SELL",3),
+        AddOrderData(1,1,20,"MARKET","SELL",3),
+
+        AddOrderData(1,1,20,"LIMIT","SELL",3),
+        AddOrderData(1,1,20,"LIMIT","SELL",3),
+        AddOrderData(1,1,20,"LIMIT","SELL",3),
+        AddOrderData(1,1,20,"LIMIT","SELL",3),
+        
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+        AddOrderData(1,1,30,"MARKET","BUY",3),
+
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+        AddOrderData(1,1,10,"LIMIT","BUY",3),
+
+    ]
+
+
+    for order in price_is_3_scenario_filling_in_3_steps:
         OrderService.add_order(order.user_id,order.token_pair_id,order.amount,order.type,order.direction,order.price)
 
 
