@@ -52,7 +52,7 @@ class ScheduleExecuteMatchedOrders():
             if not order.lock_if_not():raise Exception
         sell_required_account_balance.locked_amount = sell_required_account_balance.locked_amount - pair_amount
         sell_other_account_balance.free_amount = sell_other_account_balance.free_amount + base_amount
-        buy_required_account_balance.locked_amount = buy_other_account_balance.locked_amount - base_amount
+        buy_required_account_balance.locked_amount = buy_required_account_balance.locked_amount - base_amount
         buy_other_account_balance.free_amount = buy_other_account_balance.free_amount + pair_amount
         sell_order.remaining_amount = sell_order.remaining_amount - pair_amount
         sell_order.filled_amount = sell_order.filled_amount + pair_amount

@@ -45,6 +45,11 @@ class OrderService():
             
             if (required_token_account_balance.free_amount < required_token_amount):
                 logger.error(f'insufficient balance')
+                logger.error(required_token_account_balance.free_amount)
+                logger.error(other_token_account_balance.free_amount)
+                logger.error(required_token_amount)
+                logger.error(type)
+                logger.error(direction)
                 transaction.set_rollback(True)
                 return (False,required_token_account_balance)
             else:

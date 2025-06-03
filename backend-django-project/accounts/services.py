@@ -16,3 +16,10 @@ class UserService:
     @staticmethod
     def get_user_by_id(user_id):
         return CustomUser.objects.get(id=user_id)
+
+    def get_user_by_username(username):
+        user = CustomUser.objects.get(username = username)
+        return user
+    
+    def get_user_by_eth_index(eth_index):
+        return CustomUser.objects.get(eth_index=eth_index)

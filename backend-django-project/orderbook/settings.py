@@ -64,7 +64,11 @@ DATABASES = {
         'PASSWORD': 'changeme',
         'HOST': 'localhost',
         'PORT': '5432',
+         'TEST': {
+            'NAME': 'orderbook',
+        },
     }
+
 }
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
